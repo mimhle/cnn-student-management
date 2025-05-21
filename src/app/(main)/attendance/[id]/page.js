@@ -91,7 +91,7 @@ export default function Page({ params }) {
                             );
                         }
                         return (
-                            <div style={{ padding: 8 }}>
+                            <div style={{ padding: 8 }} className={"flex flex-rows justify-between"}>
                                 <Row gutter={8}>
                                     <Col>
                                         <Select
@@ -130,6 +130,9 @@ export default function Page({ params }) {
                                         </Button>
                                     </Col>
                                 </Row>
+                                <div>
+                                    <Typography.Title level={3}>{value.localeData().months()[value.month()]} - {value.year()}</Typography.Title>
+                                </div>
                             </div>
                         );
                     }}

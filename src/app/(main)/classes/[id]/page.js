@@ -5,10 +5,12 @@ import { Button, Space, Spin, Table, Tag } from "antd";
 import EditStudentModal from "@/app/(main)/students/EditStudentModal";
 import { EditOutlined } from "@ant-design/icons";
 import { getClassStudent_Lecture } from "@/app/actions";
+import { useRouter } from 'next/navigation'
 import { scoreColor } from "@/app/utils";
 
 export default function Page({ params }) {
     params = use(params);
+    const router = useRouter()
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [modalOpen, setModalOpen] = useState(false);
@@ -85,12 +87,17 @@ export default function Page({ params }) {
                 onClose={() => setModalOpen(false)}
                 onSuccess={() => {setReload(!reload)}}
             />
-            <h1 className="text-3xl font-bold underline">
-                {params.id}
-            </h1>
+            <div className="flex flex-row justify-between">
+                <h1 className="text-3xl font-bold underline">
+                    {params.id}
+                </h1>
+                <Button href={`/attendance/${params.id}`}>
+                    Attendance
+                </Button>
+            </div>
             <div>
                 <Spin spinning={loading}>
-                    <Table columns={columns} dataSource={data}/>
+                    <Table columns={columns} dataSource={data} size="small"/>
                 </Spin>
             </div>
         </div>

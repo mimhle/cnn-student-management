@@ -44,7 +44,6 @@ export default function EditStudentModal({ classId, studentId, open, onClose, on
                     setLoading(false);
                     data = data.find(enrollment => enrollment.classSubjectId === classId);
                     form.setFieldsValue({
-                        name: data.enrollmentId,
                         midtermScore: data.midtermScore,
                         finalScore: data.finalScore,
                     });
@@ -74,13 +73,6 @@ export default function EditStudentModal({ classId, studentId, open, onClose, on
                 form={form}
                 preserve={false}
             >
-                <Form.Item
-                    label="Name"
-                    name="name"
-                    rules={[{ required: true, message: "Please input your name!" }]}
-                >
-                    <Input disabled={true}/>
-                </Form.Item>
                 <Form.Item
                     label="Midterm score"
                     name="midtermScore"

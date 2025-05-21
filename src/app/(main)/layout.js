@@ -3,10 +3,12 @@
 import MainSider from "@/app/(main)/MainLayout";
 import { useLayoutEffect, useState } from "react";
 import { getCurrentUser } from "@/app/actions";
+import { UserContext } from "@/app/(main)/context";
 
 export default function Layout({ children }) {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [name, setName] = useState("");
+    const [user, setUser] = useState(null);
 
     useLayoutEffect(() => {
         if (!localStorage.getItem("token")) {
@@ -15,6 +17,7 @@ export default function Layout({ children }) {
             setIsLoggedIn(true);
             getCurrentUser(localStorage.getItem("token")).then((res) => {
                 setName(res.name);
+                setUser(res);
                 localStorage.setItem("user", JSON.stringify(res));
             });
         }
@@ -22,7 +25,9 @@ export default function Layout({ children }) {
 
     return (
         isLoggedIn && <MainSider name={name}>
-            {children}
+            <UserContext value={user}>
+                {children}
+            </UserContext>
         </MainSider>
     );
 }

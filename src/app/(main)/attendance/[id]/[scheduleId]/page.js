@@ -18,6 +18,7 @@ export default function Page({ params }) {
             setAttendanceData(data.map((item) => ({
                 key: `${item.studentId}${item.status}`,
                 id: item.studentId,
+                name: item.studentName,
                 excusedAbsence: item.status === 1,
                 unexcusedAbsence: item.status === 2,
                 attendanceId: item.attendanceId,
@@ -32,14 +33,21 @@ export default function Page({ params }) {
             dataIndex: 'id',
             key: 'id',
             defaultSortOrder: 'ascend',
-            render: (text, record) => <a href={`/students/${record.key}`}>{text}</a>,
+            render: (text, record) => <a href={`/students/${record.id}`}>{text}</a>,
+            sorter: (a, b) => a?.id.localeCompare(b?.id),
+        },
+        {
+            title: 'Name',
+            dataIndex: 'name',
+            key: 'name',
+            render: (text, record) => <a href={`/students/${record.id}`}>{text}</a>,
             sorter: (a, b) => a?.id.localeCompare(b?.id),
         },
         {
             title: 'Excused Absences',
             dataIndex: 'excusedAbsence',
             key: 'excusedAbsence',
-            render: (text, record) => <Checkbox defaultChecked={text} onChange={(e) => {
+            render: (text, record) => <Checkbox className="checkbox-yellow" defaultChecked={text} onChange={(e) => {
                 setAttendance(localStorage.getItem("token"), record.attendanceId, e.target.checked ? 1 : 0).then((data) => {
                     setReload(!reload);
                 });
@@ -50,7 +58,7 @@ export default function Page({ params }) {
             title: 'Unexcused Absences',
             dataIndex: 'unexcusedAbsence',
             key: 'unexcusedAbsence',
-            render: (text, record) => <Checkbox defaultChecked={text} onChange={(e) => {
+            render: (text, record) => <Checkbox className="checkbox-red" defaultChecked={text} onChange={(e) => {
                 setAttendance(localStorage.getItem("token"), record.attendanceId, e.target.checked ? 2 : 0).then((data) => {
                     setReload(!reload);
                 });
@@ -68,7 +76,7 @@ export default function Page({ params }) {
             <p>Attendance page for class {params.id}</p>
             <p>Schedule {params.scheduleId}</p>
             <Spin spinning={loading}>
-                <Table columns={columns} dataSource={[...attendanceData]}/>
+                <Table columns={columns} dataSource={[...attendanceData]} pagination={false} size="small"/>
             </Spin>
         </div>
     );

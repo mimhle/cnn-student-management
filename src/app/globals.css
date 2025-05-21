@@ -1,1 +1,49 @@
 @import "tailwindcss";
+
+.checkbox-red .ant-checkbox-checked .ant-checkbox-inner {
+    background-color: #ff0000 !important;
+    border-color: #ff0000;
+}
+.checkbox-red .ant-checkbox-wrapper:hover .ant-checkbox-checked .ant-checkbox-inner {
+    background-color: #ff0000 !important;
+    border-color: #ff0000 !important;
+}
+.checkbox-red .ant-checkbox-checked:hover .ant-checkbox-checked .ant-checkbox-inner {
+    background-color: #ff0000 !important;
+    border-color: #ff0000 !important;
+}
+.checkbox-red .ant-checkbox-checked:after {
+    border-color: #ff0000 !important;
+}
+.checkbox-red .ant-checkbox:hover::after {
+    border-color: #ff0000 !important;
+}
+.checkbox-red .ant-checkbox:hover .ant-checkbox-inner {
+    border-color: #ff0000 !important;
+}
+
+.checkbox-yellow .ant-checkbox-checked .ant-checkbox-inner {
+    background-color: #ffc300 !important;
+    border-color: #ffc300;
+}
+.checkbox-yellow .ant-checkbox-wrapper:hover .ant-checkbox-checked .ant-checkbox-inner {
+    background-color: #ffc300 !important;
+    border-color: #ffc300 !important;
+}
+.checkbox-yellow .ant-checkbox-checked:hover .ant-checkbox-checked .ant-checkbox-inner {
+    background-color: #ffc300 !important;
+    border-color: #ffc300 !important;
+}
+.checkbox-yellow .ant-checkbox-checked:after {
+    border-color: #ffc300 !important;
+}
+.checkbox-yellow .ant-checkbox:hover::after {
+    border-color: #ffc300 !important;
+}
+.checkbox-yellow .ant-checkbox:hover .ant-checkbox-inner {
+    border-color: #ffc300 !important;
+}
+
+.ant-menu-item.ant-menu-item-only-child {
+    padding-left: 0 !important;
+}

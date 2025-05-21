@@ -142,3 +142,93 @@ export async function setAttendance(token, attendanceId, status) {
         }),
     }).then((res) => res.json());
 }
+
+export async function getStudent(token, studentId) {
+    return fetch(`${API_URL}/Student/${studentId}`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+    }).then((res) => {
+        return res.json();
+    });
+}
+
+export async function getClassSubject(token, classSubjectId) {
+    return fetch(`${API_URL}/ClassSubject/${classSubjectId}`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+    }).then((res) => res.json());
+}
+
+export async function getSubject(token, subjectId) {
+    return fetch(`${API_URL}/Subject/${subjectId}`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+    }).then((res) => res.json());
+}
+
+export async function getLecturer(token, lecturerId) {
+    return fetch(`${API_URL}/Lecture/${lecturerId}`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+    }).then((res) => res.json());
+}
+
+export async function getAllStudentInfo(token, studentId) {
+    return getStudent(token, studentId).then(async (data) => {
+        return {
+            ...data,
+            enrollment: await getStudentEnrollment(token, studentId).then(async (enrollment) => {
+                const subjectId = await Promise.all(enrollment.map((item) => {
+                    return getClassSubject(token, item.classSubjectId).then(async (subject) => {
+                        const s = await getSubject(token, subject.subjectId);
+                        return {
+                            subjectId: subject.subjectId,
+                            subjectName: s.name,
+                            finalWeight: s.finalWeight,
+                            credit: s.credit,
+                            totalScore: (Math.round(item.midtermScore * (1-s.finalWeight) + item.finalScore * s.finalWeight * 100) / 100).toFixed(2),
+                            lecturerId: subject.lecturerId,
+                            lecturerName: await getLecturer(token, subject.lecturerId).then((lecture) => {
+                                return lecture.lecturer.fullName;
+                            }),
+                            schedules: await getSchedules(token, subject.classSubjectId).then(async(schedules) => {
+                                schedules = await Promise.all(schedules.map((schedule) => {
+                                    return getAttendance(token, schedule.scheduleId).then((attendance) => {
+                                        return {
+                                            ...schedule,
+                                            attendance: attendance.find((item) => {
+                                                return item.studentId === studentId;
+                                            }),
+                                        };
+                                    });
+                                }));
+                                return schedules;
+                            })
+                        };
+                    });
+                }));
+
+                for (let i = 0; i < enrollment.length; i++) {
+                    enrollment[i] = {
+                        ...enrollment[i],
+                        ...subjectId[i],
+                    };
+                }
+
+                return enrollment;
+            })
+        };
+    });
+}
