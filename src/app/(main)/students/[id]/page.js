@@ -53,18 +53,16 @@ const QuickAttendance = ({ schedule, disabled = false }) => {
     </div>
 };
 
-export default function Page({ params }) {
-    params = use(params);
+export function StudentInfo({ params }) {
     const user = useContext(UserContext);
     const [student, setStudent] = useState(null);
     const [enrollmentDetails, setEnrollmentDetails] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        console.log(user);
         getAllStudentInfo(localStorage.getItem("token"), params.id).then((data) => {
-            setStudent(data);
             console.log(data);
+            setStudent(data);
             setEnrollmentDetails(data.enrollment.map((item) => ({
                 key: item.classSubjectId,
                 id: item.classSubjectId,
@@ -223,4 +221,10 @@ export default function Page({ params }) {
             </Spin>
         </div> : null
     );
+}
+
+export default function Page({ params }) {
+    params = use(params);
+
+    return <StudentInfo params={params} />;
 }

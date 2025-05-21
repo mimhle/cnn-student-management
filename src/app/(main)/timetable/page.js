@@ -1,92 +1,77 @@
 "use client";
 
-import { use, useContext, useEffect, useState } from "react";
-import { Button, Calendar, Col, Row, Select, Spin, Tag, Typography } from "antd";
-import { useMessage } from "@/app/utils";
-import { getAttendance, getSchedules } from "@/app/actions";
-import { useRouter } from "next/navigation";
+import { Button, Calendar, Col, Popover, Row, Select, Spin, Tag, Typography } from "antd";
 import dayjs from "dayjs";
+import { useContext, useEffect, useState } from "react";
+import { getAllStudentInfo } from "@/app/actions";
 import { UserContext } from "@/app/(main)/context";
 
-export default function Page({ params }) {
-    params = use(params);
+export default function Page() {
     const user = useContext(UserContext);
-    const router = useRouter();
-    const { contextHolder, success, error } = useMessage();
     const [currentDate, setCurrentDate] = useState(dayjs());
-    const [schedule, setSchedule] = useState([]);
+    const [schedules, setSchedules] = useState([]);
+    const [classSubjectIdName, setClassSubjectIdName] = useState({});
     const [loading, setLoading] = useState(true);
-    const [attendance, setAttendance] = useState([]);
 
-    const onClickDay = (date) => {
-        setCurrentDate(date);
-    };
+    useEffect(() => {
+        getAllStudentInfo(localStorage.getItem("token"), user.userId).then((data) => {
+            const names = {};
+            const s = data.enrollment.map((item) => {
+                names[item.classSubjectId] = item.subjectName;
+                return item.schedules;
+            }).flat().map(item => ({
+                ...item,
+                date: dayjs(item.date),
+            })).sort((a, b) => a.date - b.date || a.timeSlot.localeCompare(b.timeSlot, undefined, { numeric: true }));
+
+            console.log(data, names);
+            setSchedules(s);
+            setClassSubjectIdName(names);
+            setLoading(false);
+        });
+    }, []);
 
     const cellRender = (current, info) => {
         if (info.type === "date") {
             const dateCellRender = c => {
-                const currentSchedule = schedule.find(item => item.date.isSame(c, "date"));
-                if (!currentSchedule || loading) return null;
+                const currentSchedule = schedules.filter(item => item.date.isSame(c, "date"));
+                if (currentSchedule?.length === 0) return null;
 
-                return currentSchedule ? <div className={"flex flex-col gap-2"}>
-                    <Tag
-                        color={user.role !== "Student" ? "blue" : attendance[currentSchedule.scheduleId]?.status === 1 ? "gold" : attendance[currentSchedule.scheduleId]?.status === 2 ? "red" : "green"}
-                        className="w-fit text-center"
-                    >
-                        {currentSchedule.timeSlot}
-                    </Tag>
-                    {user.role !== "Student" ? <Button className={"!w-fit !px-2"} type="primary" onClick={() => {
-                        router.push(`./${params.id}/${currentSchedule.scheduleId}`);
-                    }}>
-                        Check attendance
-                    </Button> : null}
-                </div> : null;
+                return currentSchedule ? <Popover title="Detail" placement="left" content={<div>
+                    {currentSchedule.map((schedule, i) => (
+                        <div key={i} className="flex flex-col gap-2">
+                            <div className="flex flex-row justify-between">
+                                <span>{classSubjectIdName[schedule.classSubjectId]}&nbsp;</span>
+                                <span className="text-sm opacity-70">({schedule.classSubjectId})&nbsp;</span>
+                                <Tag color="green" className="w-fit text-center">
+                                    {schedule.timeSlot}
+                                </Tag>
+                            </div>
+                        </div>
+                    ))}
+                </div>}>
+                    <div className={"flex flex-col gap-2"}>
+                        {currentSchedule.map((schedule, i) => (
+                            <Tag key={i} color="green" className="w-fit text-center">
+                                {schedule.timeSlot}
+                            </Tag>
+                        ))}
+                    </div>
+                </Popover>: null;
             };
             return dateCellRender(current);
         }
     };
 
-    useEffect(() => {
-        getSchedules(localStorage.getItem("token"), params.id).then((data) => {
-            setSchedule(data.map((item) => ({
-                scheduleId: item.scheduleId,
-                date: dayjs(item.date),
-                timeSlot: item.timeSlot,
-            })));
-            if (user.role === "Student") {
-                Promise.all(data.map((item) => {
-                    return getAttendance(localStorage.getItem("token"), item.scheduleId).then((attendance) => {
-                        const studentAttendance = attendance.find(item => item.studentId === user.userId);
-                        return {
-                            ...item,
-                            attendance: studentAttendance,
-                        };
-                    });
-                })).then((data) => {
-                    const result = {};
-                    data.map(item => {
-                        result[item.scheduleId] = item.attendance;
-                    });
-                    setAttendance(result);
-                    setLoading(false);
-                    console.log(result);
-                });
-            } else {
-                setLoading(false);
-            }
-        });
-    }, []);
-
     return (
         <div>
-            {contextHolder}
             <h1 className="text-3xl font-bold underline">
-                Attendance {params.id}
+                Timetable
             </h1>
             <Spin spinning={loading}>
-                {<Calendar
+                <Calendar
                     value={currentDate}
-                    onChange={onClickDay}
+                    onChange={setCurrentDate}
                     cellRender={cellRender}
                     headerRender={({ value, type, onChange, onTypeChange }) => {
                         const start = 0;
@@ -162,7 +147,7 @@ export default function Page({ params }) {
                             </div>
                         );
                     }}
-                />};
+                />
             </Spin>
         </div>
     );

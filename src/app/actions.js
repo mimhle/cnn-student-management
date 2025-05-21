@@ -53,7 +53,9 @@ export async function getAllClasses_Student(token) {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
         },
-    }).then((res) => res.json());
+    }).then((res) => {
+        return res.json();
+    });
 }
 
 export async function getClassStudent_Lecture(token, classId) {

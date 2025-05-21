@@ -17,17 +17,16 @@ export default function Layout({ children }) {
             setIsLoggedIn(true);
             getCurrentUser(localStorage.getItem("token")).then((res) => {
                 setName(res.name);
-                setUser(res);
-                localStorage.setItem("user", JSON.stringify(res));
+                setUser(() => res);
             });
         }
     }, []);
 
     return (
-        isLoggedIn && <MainSider name={name}>
-            <UserContext value={user}>
+        (isLoggedIn && user) && <UserContext value={user}>
+            <MainSider name={name}>
                 {children}
-            </UserContext>
-        </MainSider>
+            </MainSider>
+        </UserContext>
     );
 }

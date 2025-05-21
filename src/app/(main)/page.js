@@ -1,16 +1,9 @@
-"use client";
+"use server";
 
-import { Button } from 'antd';
+import { redirect } from 'next/navigation'
 
-export default function Home() {
-    const logout = () => {
-        localStorage.removeItem("token");
-        window.location.href = "/login";
-    };
+export default async function Home() {
+    redirect('/info');
 
-    return (
-        <div>
-            <Button type="primary" onClick={logout}>Log out</Button>
-        </div>
-    );
+    return null;
 }

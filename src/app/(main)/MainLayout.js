@@ -7,13 +7,15 @@ import {
     UserOutlined,
 } from "@ant-design/icons";
 import { Button, ConfigProvider, Divider, Layout, Menu, theme } from "antd";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useRouter, usePathname } from 'next/navigation'
 import { getAllClasses_Lecture, getAllClasses_Student } from "@/app/actions";
+import { UserContext } from "@/app/(main)/context";
 
 const { Header, Sider, Content } = Layout;
 
 export default function MainSider({ children, name }) {
+    const user = useContext(UserContext);
     const [collapsed, setCollapsed] = useState(false);
     const router = useRouter();
     const pathname = usePathname();
@@ -25,7 +27,7 @@ export default function MainSider({ children, name }) {
     const [attendance, setAttendance] = useState([]);
 
     useEffect(() => {
-        const getAllClasses = localStorage.getItem("user") === "Student" ? getAllClasses_Student : getAllClasses_Lecture;
+        const getAllClasses = user.role === "Student" ? getAllClasses_Student : getAllClasses_Lecture;
 
         getAllClasses(localStorage.getItem("token")).then((data) => {
             setClasses(data.map((cls) => ({
@@ -71,7 +73,7 @@ export default function MainSider({ children, name }) {
                             router.push(`${item.key}`)
                         }}
                         items={[
-                            {
+                            ...[{
                                 key: '/info',
                                 icon: <InfoCircleOutlined />,
                                 label: 'Info',
@@ -81,14 +83,17 @@ export default function MainSider({ children, name }) {
                                 icon: <CheckCircleOutlined />,
                                 label: 'Attendance',
                                 children: attendance,
-                            },
-                            {
+                            },],
+                            ...(user.role === "Lecturer" ? [{
                                 key: '/classes',
                                 icon: <BookOutlined />,
                                 label: 'Classes',
                                 children: classes,
-                            },
-
+                            },] : [{
+                                key: '/timetable',
+                                icon: <BookOutlined />,
+                                label: 'Timetable',
+                            },])
                         ]}
                     />
                 </ConfigProvider>
@@ -106,8 +111,13 @@ export default function MainSider({ children, name }) {
                         }}
                     />
                     <Header className="flex justify-between items-center !bg-transparent">
-                        <div className="text-2xl font-bold">
-                            Welcome {name}&nbsp;
+                        <div className="flex flex-col justify-between mr-2">
+                            <div className="text-2xl font-bold">
+                                Welcome {name}
+                            </div>
+                            <span className="leading-none ml-auto w-fit">
+                                {user?.role}
+                            </span>
                         </div>
                         <Button type="default" onClick={() => {
                             localStorage.removeItem("token");
