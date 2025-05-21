@@ -32,16 +32,16 @@ const columns = [
             </div>
         ),
     },
-    {
-        title: 'Action',
-        key: 'action',
-        render: (_, record) => (
-            <Space size="middle">
-                <a>Details</a>
-                <a>Delete</a>
-            </Space>
-        ),
-    },
+    // {
+    //     title: 'Action',
+    //     key: 'action',
+    //     render: (_, record) => (
+    //         <Space size="middle">
+    //             <a>Details</a>
+    //             <a>Delete</a>
+    //         </Space>
+    //     ),
+    // },
 ];
 
 export default function Page() {
@@ -62,7 +62,7 @@ export default function Page() {
     }, []);
 
     return (
-        <div className="App">
+        <div>
             <h1 className="text-3xl font-bold">
                 Students
             </h1>

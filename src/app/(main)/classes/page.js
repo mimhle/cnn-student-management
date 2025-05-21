@@ -1,15 +1,18 @@
 "use client";
 
-import { use } from "react";
-import { Space, Tag } from "antd";
+const columns = [
+    {
+        title: "Id",
+        dataIndex: "id",
+        key: "id",
+    },
+];
 
 export default function Page({ params }) {
-    params = use(params);
-
     return (
-        <div className="App">
+        <div>
             <h1 className="text-3xl font-bold underline">
-                student {params.id}
+                classes
             </h1>
         </div>
     );

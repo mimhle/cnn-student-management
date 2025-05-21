@@ -1,7 +1,6 @@
 import "./globals.css";
 import { AntdRegistry } from '@ant-design/nextjs-registry';
 import '@ant-design/v5-patch-for-react-19';
-import MainSider from "@/app/MainLayout";
 
 export const metadata = {
     title: "Create Next App",
@@ -13,9 +12,7 @@ export default function RootLayout({ children }) {
         <html lang="en">
             <body className={`antialiased`}>
                 <AntdRegistry>
-                    <MainSider>
-                        {children}
-                    </MainSider>
+                    {children}
                 </AntdRegistry>
             </body>
         </html>

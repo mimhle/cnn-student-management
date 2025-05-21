@@ -1,7 +1,7 @@
 "use client";
 
 import {
-    BookOutlined, CheckCircleOutlined,
+    BookOutlined, CheckCircleOutlined, LogoutOutlined,
     MenuFoldOutlined,
     MenuUnfoldOutlined,
     UserOutlined,
@@ -9,11 +9,11 @@ import {
 import { Button, Divider, Layout, Menu, theme } from "antd";
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from 'next/navigation'
-import { getAllClasses } from "@/app/actions";
+import { getAllClasses_Lecture, getAllClasses_Student } from "@/app/actions";
 
 const { Header, Sider, Content } = Layout;
 
-export default function MainSider({ children }) {
+export default function MainSider({ children, name }) {
     const [collapsed, setCollapsed] = useState(false);
     const router = useRouter();
     const pathname = usePathname();
@@ -22,12 +22,19 @@ export default function MainSider({ children }) {
     } = theme.useToken();
 
     const [classes, setClasses] = useState([]);
+    const [attendance, setAttendance] = useState([]);
 
     useEffect(() => {
-        getAllClasses().then((data) => {
-            setClasses(data.classes.map((cls) => ({
-                key: `/classes/${cls.id}`,
-                label: cls.id,
+        const getAllClasses = localStorage.getItem("user") === "Student" ? getAllClasses_Student : getAllClasses_Lecture;
+
+        getAllClasses(localStorage.getItem("token")).then((data) => {
+            setClasses(data.map((cls) => ({
+                key: `/classes/${cls.classSubjectId}`,
+                label: cls.classSubjectId,
+            })));
+            setAttendance(data.map((cls) => ({
+                key: `/attendance/${cls.classSubjectId}`,
+                label: cls.classSubjectId,
             })));
         });
     }, []);
@@ -42,8 +49,8 @@ export default function MainSider({ children }) {
                 <Menu
                     theme="dark"
                     mode="inline"
-                    defaultSelectedKeys={[`/${pathname.split('/')[1]}`, ...(pathname.split('/')[1] === "classes" ? [pathname] : [])]}
-                    defaultOpenKeys={[...(pathname.split('/')[1] === "classes" ? [`/${pathname.split('/')[1]}`] : [])]}
+                    defaultSelectedKeys={[`/${pathname.split('/')[1]}`, ...(["classes", "attendance"].includes(pathname.split('/')[1]) ? [pathname.split('/').slice(0, 3).join('/')] : [])]}
+                    defaultOpenKeys={[...(["classes", "attendance"].includes(pathname.split('/')[1]) ? [`/${pathname.split('/')[1]}`] : [])]}
                     onClick={(item) => {
                         router.push(`${item.key}`)
                     }}
@@ -52,11 +59,7 @@ export default function MainSider({ children }) {
                             key: '/attendance',
                             icon: <CheckCircleOutlined />,
                             label: 'Attendance',
-                        },
-                        {
-                            key: '/students',
-                            icon: <UserOutlined />,
-                            label: 'Students',
+                            children: attendance,
                         },
                         {
                             key: '/classes',
@@ -69,7 +72,7 @@ export default function MainSider({ children }) {
                 />
             </Sider>
             <Layout>
-                <Header style={{ padding: 0, background: colorBgContainer }}>
+                <Header style={{ padding: 0, background: colorBgContainer }} className="flex flex-row justify-between">
                     <Button
                         type="text"
                         icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
@@ -80,6 +83,15 @@ export default function MainSider({ children }) {
                             height: 64,
                         }}
                     />
+                    <Header className="flex justify-between items-center !bg-transparent">
+                        <div className="text-2xl font-bold">
+                            Welcome {name}&nbsp;
+                        </div>
+                        <Button type="default" onClick={() => {
+                            localStorage.removeItem("token");
+                            window.location.href = "/login";
+                        }}>Log out <LogoutOutlined /></Button>
+                    </Header>
                 </Header>
                 <Content
                     style={{
