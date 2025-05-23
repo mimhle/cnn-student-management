@@ -34,6 +34,11 @@ export function scoreColor(score) {
     }
 }
 
+export function roundToTwoDecimalPlaces(num) {
+    if (num === undefined) return 0;
+    return Math.round((num + Number.EPSILON) * 100) / 100;
+}
+
 export function useMessage() {
     const [messageApi, contextHolder] = message.useMessage({
         maxCount: 3,

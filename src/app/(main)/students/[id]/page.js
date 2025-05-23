@@ -1,12 +1,15 @@
 "use client";
 
-import { use, useContext, useEffect, useState } from "react";
-import { Button, Card, Checkbox, Descriptions, Popover, Space, Spin, Table, Tag } from "antd";
+import { use, useContext, useEffect, useLayoutEffect, useState } from "react";
+import { Button, Card, Checkbox, Descriptions, Popover, Space, Spin, Table, Tag, Typography } from "antd";
 import { getAllStudentInfo, getStudent, getStudentEnrollment, setAttendance } from "@/app/actions";
-import { scoreColor } from "@/app/utils";
-import { CaretDownOutlined, CaretUpOutlined } from "@ant-design/icons";
+import { scoreColor, useMessage } from "@/app/utils";
+import { CaretDownOutlined, CaretUpOutlined, EditOutlined } from "@ant-design/icons";
 import { UserContext } from "@/app/(main)/context";
 import dayjs from "dayjs";
+import { StudentEditModal } from "@/app/Modals";
+
+const { Text } = Typography;
 
 const QuickAttendance = ({ schedule, disabled = false }) => {
     const [open, setOpen] = useState(false);
@@ -58,6 +61,9 @@ export function StudentInfo({ params }) {
     const [student, setStudent] = useState(null);
     const [enrollmentDetails, setEnrollmentDetails] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [editModalOpen, setEditModalOpen] = useState(false);
+    const [reload, setReload] = useState(false);
+    const { contextHolder, success, error } = useMessage();
 
     useEffect(() => {
         getAllStudentInfo(localStorage.getItem("token"), params.id).then((data) => {
@@ -74,10 +80,14 @@ export function StudentInfo({ params }) {
                 totalScore: item.totalScore,
                 weight: item.finalWeight,
                 schedules: item.schedules,
+                credit: item.credit,
+                absent: `${item.schedules.filter((it => {
+                    return it.attendance.status === 1 || it.attendance.status === 2;
+                })).length}/${item.schedules.length}`,
             })));
             setLoading(false);
         });
-    }, []);
+    }, [reload]);
 
     const description = [
         {
@@ -103,7 +113,7 @@ export function StudentInfo({ params }) {
         {
             key: "dateOfBirth",
             label: "Date of Birth",
-            children: new Date(student?.dateOfBirth).toLocaleDateString("en-US", {
+            children: new Date(student?.dateOfBirth).toLocaleDateString("en-GB", {
                 year: "numeric",
                 month: "2-digit",
                 day: "2-digit",
@@ -143,6 +153,15 @@ export function StudentInfo({ params }) {
             dataIndex: 'lecturer',
             key: 'lecturer',
             sorter: (a, b) => a?.lecturer.localeCompare(b?.lecturer),
+            render: (text, record) => {
+                return <a href={`/lecturers/${record.lecturerId}`}>{text}</a>;
+            },
+        },
+        {
+            title: 'Credits',
+            dataIndex: 'credit',
+            key: 'credit',
+            sorter: (a, b) => a.credit - b.credit,
         },
         {
             title: 'Weights',
@@ -171,17 +190,40 @@ export function StudentInfo({ params }) {
             render: (text, record) => <Tag color={scoreColor(text)}>{text}</Tag>,
             sorter: (a, b) => a.totalScore - b.totalScore,
         },
+        {
+            title: "Absences",
+            dataIndex: "absent",
+            key: "absent",
+            sorter: (a, b) => a.absent.localeCompare(b.absent, undefined, { numeric: true }),
+            render: (text, record) => {
+                return <Text type={parseInt(text.split("/")[0]) > 0 ? "danger" : null}>{text}</Text>;
+            },
+        },
         Table.EXPAND_COLUMN,
     ]
 
     return (
         student ? <div className="flex flex-col gap-3">
+            {contextHolder}
             <div className="w-full flex flex-row gap-2">
                 <h1 className="text-3xl font-bold w-fit">
                     {student.fullName}
                 </h1>
+                {user.role === "Student" ? <Button className="mt-auto" onClick={() => setEditModalOpen(true)}>
+                    <EditOutlined/> Update info
+                </Button> : null}
             </div>
             <div className="flex flex-row justify-start gap-4">
+                <StudentEditModal
+                    open={editModalOpen}
+                    onClose={() => setEditModalOpen(false)}
+                    onSuccess={() => {
+                        setReload(!reload);
+                        setEditModalOpen(false);
+                        success("Update successfully");
+                    }}
+                    studentId={student.studentId}
+                />
                 <Descriptions
                     title=""
                     items={description}
@@ -201,8 +243,9 @@ export function StudentInfo({ params }) {
                     expandable={{
                         columnTitle: "Attendance",
                         expandedRowRender: record => <div className="!m-0 flex flex-row flex-wrap gap-2">
-                            {/*{record.id}*/}
-                            {record.schedules.map((item) => {
+                            {record.schedules.sort((a, b) => {
+                                return dayjs(a.date).diff(dayjs(b.date)) || a.timeSlot.localeCompare(b.timeSlot);
+                            }).map((item) => {
                                 return <QuickAttendance
                                     key={item.scheduleId}
                                     schedule={item}
@@ -212,9 +255,11 @@ export function StudentInfo({ params }) {
                         </div>,
                         rowExpandable: () => true,
                         expandIcon: ({ expanded, onExpand, record }) => {
-                            return <Button type="text" onClick={e => onExpand(record, e)}>
-                                {expanded ? <>Collapse <CaretUpOutlined /></> : <>Expand <CaretDownOutlined /></>}
-                            </Button>
+                            return <div>
+                                <Button type="text" onClick={e => onExpand(record, e)}>
+                                    {expanded ? <>Collapse <CaretUpOutlined /></> : <>Expand <CaretDownOutlined /></>}
+                                </Button>
+                            </div>
                         }
                     }}
                 />
@@ -225,6 +270,16 @@ export function StudentInfo({ params }) {
 
 export default function Page({ params }) {
     params = use(params);
+    const user = useContext(UserContext);
+    const [authorized, setAuthorized] = useState(false);
 
-    return <StudentInfo params={params} />;
+    useLayoutEffect(() => {
+        if (user.role === "Student") {
+            window.location.href = "/";
+        } else {
+            setAuthorized(true);
+        }
+    }, []);
+
+    return authorized && <StudentInfo params={params} />;
 }

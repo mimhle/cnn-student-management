@@ -18,6 +18,10 @@ export default function Layout({ children }) {
             getCurrentUser(localStorage.getItem("token")).then((res) => {
                 setName(res.name);
                 setUser(() => res);
+            }).catch(() => {
+                setIsLoggedIn(false);
+                localStorage.removeItem("token");
+                window.location.href = "/login";
             });
         }
     }, []);

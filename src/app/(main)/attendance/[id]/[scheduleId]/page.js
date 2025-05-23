@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
-import { getAttendance, getSchedule, setAttendance } from "@/app/actions";
+import { getAttendance, getSchedule, getSchedules, getSubjectByClass, setAttendance } from "@/app/actions";
 import { Checkbox, Spin, Table } from "antd";
 import { useMessage } from "@/app/utils";
 
@@ -11,8 +11,21 @@ export default function Page({ params }) {
     const [attendanceData, setAttendanceData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [reload, setReload] = useState(false);
+    const [className, setClassName] = useState("");
+    const [timeSlot, setTimeSlot] = useState("");
 
     useEffect(() => {
+        getSubjectByClass(localStorage.getItem("token"), params.id).then((d) => {
+            setClassName(d.name);
+            getSchedules(localStorage.getItem("token"), params.id).then((schedules) => {
+                const schedule = schedules.find((item) => item.scheduleId === params.scheduleId);
+                setTimeSlot(`${schedule.timeSlot} ${new Date(schedule.date).toLocaleDateString("en-GB", {
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit",
+                })}`);
+            });
+        });
         getAttendance(localStorage.getItem("token"), params.scheduleId).then((data) => {
             console.log(data);
             setAttendanceData(data.map((item) => ({
@@ -68,13 +81,11 @@ export default function Page({ params }) {
     ];
 
     return (
-        <div>
+        className && timeSlot && <div>
             {contextHolder}
-            <h1 className="text-3xl font-bold underline">
-                Attendance {params.scheduleId}
+            <h1 className="text-3xl font-bold mb-2">
+                {className} - {timeSlot}
             </h1>
-            <p>Attendance page for class {params.id}</p>
-            <p>Schedule {params.scheduleId}</p>
             <Spin spinning={loading}>
                 <Table columns={columns} dataSource={[...attendanceData]} pagination={false} size="small"/>
             </Spin>

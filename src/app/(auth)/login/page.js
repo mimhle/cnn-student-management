@@ -2,15 +2,25 @@
 
 import { Button, Card, Checkbox, Form, Input, Typography } from "antd";
 import { login } from "@/app/actions";
+import { useMessage } from "@/app/utils";
+import { useState } from "react";
 
 const {Title} = Typography;
 
 export default function Page() {
+    const { contextHolder, success, error } = useMessage();
+    const [loading, setLoading] = useState(false);
+
     const onFinish = values => {
+        setLoading(true);
         login(values.username, values.password).then(res => {
             const token = res.token;
             localStorage.setItem("token", token);
             window.location.reload();
+        }).catch(err => {
+            error(err.message);
+        }).finally(() => {
+            setLoading(false);
         });
     };
     const onFinishFailed = errorInfo => {
@@ -18,6 +28,7 @@ export default function Page() {
     };
 
     return <div className="w-fit p-4 m-auto h-screen flex flex-col justify-center">
+        {contextHolder}
         <Card className="w-fit h-fit">
             <Title level={3}>Login</Title>
             <Form
@@ -47,7 +58,7 @@ export default function Page() {
                 </Form.Item>
 
                 <Form.Item label={null}>
-                    <Button type="primary" htmlType="submit">
+                    <Button type="primary" htmlType="submit" loading={loading}>
                         Login
                     </Button>
                 </Form.Item>

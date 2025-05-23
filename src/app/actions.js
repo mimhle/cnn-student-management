@@ -122,6 +122,16 @@ export async function getSchedule(token, scheduleId) {
     }).then((res) => res.json());
 }
 
+export async function getSchedulesByClass(token, classSubjectId) {
+    return fetch(`${API_URL}/Schedule/by-class/${classSubjectId}`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+    }).then((res) => res.json());
+}
+
 export async function getAttendance(token, scheduleId) {
     return fetch(`${API_URL}/Attendance/by-schedule/${scheduleId}`, {
         method: "GET",
@@ -167,6 +177,26 @@ export async function getClassSubject(token, classSubjectId) {
     }).then((res) => res.json());
 }
 
+export async function getAllClassSubject(token) {
+    return fetch(`${API_URL}/ClassSubject`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+    }).then((res) => res.json());
+}
+
+export async function getSubjectByClass(token, classSubjectId) {
+    return fetch(`${API_URL}/Subject/by-class-subject/${classSubjectId}`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+    }).then((res) => res.json());
+}
+
 export async function getSubject(token, subjectId) {
     return fetch(`${API_URL}/Subject/${subjectId}`, {
         method: "GET",
@@ -199,7 +229,7 @@ export async function getAllStudentInfo(token, studentId) {
                             subjectId: subject.subjectId,
                             subjectName: s.name,
                             finalWeight: s.finalWeight,
-                            credit: s.credit,
+                            credit: s.credits,
                             totalScore: (Math.round(item.midtermScore * (1-s.finalWeight) + item.finalScore * s.finalWeight * 100) / 100).toFixed(2),
                             lecturerId: subject.lecturerId,
                             lecturerName: await getLecturer(token, subject.lecturerId).then((lecture) => {
@@ -232,5 +262,132 @@ export async function getAllStudentInfo(token, studentId) {
                 return enrollment;
             })
         };
+    });
+}
+
+export async function getAllLecturerInfo(token, lecturerId) {
+    return getLecturer(token, lecturerId).then(async (data) => {
+        return {
+            ...data.lecturer,
+            classSubjects: await getAllClassSubject(token).then((classSubjects) => {
+                return Promise.all(classSubjects.filter((item) => item.lecturerId === lecturerId).map(item => {
+                    return getSubject(token, item.subjectId).then(async subject => {
+                        return {
+                            classSubjectId: item.classSubjectId,
+                            subjectId: item.subjectId,
+                            subjectName: subject.name,
+                            finalWeight: subject.finalWeight,
+                            credit: subject.credits,
+                            schedules: await getSchedules(token, item.classSubjectId).then((schedules) => {
+                                schedules = Promise.all(schedules.map((schedule) => {
+                                    return getAttendance(token, schedule.scheduleId).then((attendance) => {
+                                        return {
+                                            ...schedule,
+                                            attendance: attendance,
+                                        };
+                                    });
+                                }));
+                                return schedules;
+                            }),
+                        };
+                    });
+                }));
+            }),
+        };
+    });
+}
+
+export async function setStudentInfo(token, studentId, data) {
+    return fetch(`${API_URL}/Student/${studentId}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+    }).then((res) => res.text());
+}
+
+export async function setPassword(token, oldPassword, newPassword) {
+    return fetch(`${API_URL}/Auth/change-password`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+            currentPassword: oldPassword,
+            newPassword: newPassword,
+        }),
+    }).then((res) => res.text());
+}
+
+export async function setLecturerInfo(token, lecturerId, data) {
+    return fetch(`${API_URL}/Lecture/${lecturerId}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+    }).then((res) => res.text());
+}
+
+export async function setSchedule(token, scheduleId, data) {
+    return fetch(`${API_URL}/Schedule/${scheduleId}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+    }).then((res) => res.text());
+}
+
+export async function deleteSchedule(token, scheduleId) {
+    return fetch(`${API_URL}/Schedule/${scheduleId}`, {
+        method: "DELETE",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+    }).then((res) => res.text());
+}
+
+export async function createSchedule(token, data) {
+    return fetch(`${API_URL}/Schedule`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+    }).then(async (res) => {
+        const scheduleId = (await res.json()).scheduleId;
+        if (res.ok) {
+            await getClassStudent_Lecture(token, data.classSubjectId).then(async (students) => {
+                return await Promise.all(students.map((student) => {
+                    return fetch(`${API_URL}/Attendance`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${token}`,
+                        },
+                        body: JSON.stringify({
+                            scheduleId: scheduleId,
+                            studentId: student.student.studentId,
+                            status: 0,
+                            dateTime: data.date,
+                        }),
+                    }).then((res) => {
+                        console.log(res);
+                    }).catch(e => {
+                        console.log(e);
+                    });
+                }));
+            });
+        } else {
+            return res.text();
+        }
     });
 }

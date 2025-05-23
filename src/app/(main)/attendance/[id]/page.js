@@ -1,9 +1,9 @@
 "use client";
 
-import { use, useContext, useEffect, useState } from "react";
+import { use, useContext, useEffect, useLayoutEffect, useState } from "react";
 import { Button, Calendar, Col, Row, Select, Spin, Tag, Typography } from "antd";
 import { useMessage } from "@/app/utils";
-import { getAttendance, getSchedules } from "@/app/actions";
+import { getAttendance, getClassSubject, getSchedules, getSubject, getSubjectByClass } from "@/app/actions";
 import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
 import { UserContext } from "@/app/(main)/context";
@@ -17,6 +17,7 @@ export default function Page({ params }) {
     const [schedule, setSchedule] = useState([]);
     const [loading, setLoading] = useState(true);
     const [attendance, setAttendance] = useState([]);
+    const [className, setClassName] = useState("");
 
     const onClickDay = (date) => {
         setCurrentDate(date);
@@ -46,42 +47,44 @@ export default function Page({ params }) {
         }
     };
 
-    useEffect(() => {
-        getSchedules(localStorage.getItem("token"), params.id).then((data) => {
-            setSchedule(data.map((item) => ({
-                scheduleId: item.scheduleId,
-                date: dayjs(item.date),
-                timeSlot: item.timeSlot,
-            })));
-            if (user.role === "Student") {
-                Promise.all(data.map((item) => {
-                    return getAttendance(localStorage.getItem("token"), item.scheduleId).then((attendance) => {
-                        const studentAttendance = attendance.find(item => item.studentId === user.userId);
-                        return {
-                            ...item,
-                            attendance: studentAttendance,
-                        };
+    useLayoutEffect(() => {
+        getSubjectByClass(localStorage.getItem("token"), params.id).then((d) => {
+            setClassName(d.name);
+            getSchedules(localStorage.getItem("token"), params.id).then((data) => {
+                setSchedule(data.map((item) => ({
+                    scheduleId: item.scheduleId,
+                    date: dayjs(item.date),
+                    timeSlot: item.timeSlot,
+                })));
+                if (user.role === "Student") {
+                    Promise.all(data.map((item) => {
+                        return getAttendance(localStorage.getItem("token"), item.scheduleId).then((attendance) => {
+                            const studentAttendance = attendance.find(item => item.studentId === user.userId);
+                            return {
+                                ...item,
+                                attendance: studentAttendance,
+                            };
+                        });
+                    })).then((data) => {
+                        const result = {};
+                        data.map(item => {
+                            result[item.scheduleId] = item.attendance;
+                        });
+                        setAttendance(result);
+                        setLoading(false);
                     });
-                })).then((data) => {
-                    const result = {};
-                    data.map(item => {
-                        result[item.scheduleId] = item.attendance;
-                    });
-                    setAttendance(result);
+                } else {
                     setLoading(false);
-                    console.log(result);
-                });
-            } else {
-                setLoading(false);
-            }
+                }
+            });
         });
     }, []);
 
     return (
         <div>
             {contextHolder}
-            <h1 className="text-3xl font-bold underline">
-                Attendance {params.id}
+            <h1 className="text-3xl font-bold">
+                {params.id} - {className}
             </h1>
             <Spin spinning={loading}>
                 {<Calendar
