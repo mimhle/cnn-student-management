@@ -1,7 +1,9 @@
 "use client";
 
-import { Button, Card, Checkbox, Form, Input } from "antd";
+import { Button, Card, Checkbox, Form, Input, Typography } from "antd";
 import { login } from "@/app/actions";
+
+const {Title} = Typography;
 
 export default function Page() {
     const onFinish = values => {
@@ -17,6 +19,7 @@ export default function Page() {
 
     return <div className="w-fit p-4 m-auto h-screen flex flex-col justify-center">
         <Card className="w-fit h-fit">
+            <Title level={3}>Login</Title>
             <Form
                 name="basic"
                 labelCol={{ span: 8 }}

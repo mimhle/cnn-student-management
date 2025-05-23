@@ -30,7 +30,7 @@ export default function Page({ params }) {
 
                 return currentSchedule ? <div className={"flex flex-col gap-2"}>
                     <Tag
-                        color={user.role !== "Student" ? "blue" : attendance[currentSchedule.scheduleId]?.status === 1 ? "gold" : attendance[currentSchedule.scheduleId]?.status === 2 ? "red" : "green"}
+                        color={user.role !== "Student" ? "blue" : attendance[currentSchedule.scheduleId]?.status === 1 ? "gold" : attendance[currentSchedule.scheduleId]?.status === 2 ? "red" : dayjs().isAfter(currentSchedule.date) ? "green" : "default"}
                         className="w-fit text-center"
                     >
                         {currentSchedule.timeSlot}

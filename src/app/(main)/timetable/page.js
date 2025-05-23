@@ -43,7 +43,7 @@ export default function Page() {
                             <div className="flex flex-row justify-between">
                                 <span>{classSubjectIdName[schedule.classSubjectId]}&nbsp;</span>
                                 <span className="text-sm opacity-70">({schedule.classSubjectId})&nbsp;</span>
-                                <Tag color="green" className="w-fit text-center">
+                                <Tag color="blue" className="w-fit text-center">
                                     {schedule.timeSlot}
                                 </Tag>
                             </div>
@@ -52,7 +52,7 @@ export default function Page() {
                 </div>}>
                     <div className={"flex flex-col gap-2"}>
                         {currentSchedule.map((schedule, i) => (
-                            <Tag key={i} color="green" className="w-fit text-center">
+                            <Tag key={i} color="blue" className="w-fit text-center">
                                 {schedule.timeSlot}
                             </Tag>
                         ))}

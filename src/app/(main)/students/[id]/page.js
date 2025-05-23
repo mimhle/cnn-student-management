@@ -43,7 +43,7 @@ const QuickAttendance = ({ schedule, disabled = false }) => {
                 className={`!w-fit ${disabled ? '!pointer-events-none' : ''}`}
                 size="small"
                 type="default"
-                color={currentStatus === 1 ? "gold" : currentStatus === 2 ? "danger" : disabled ? "default" : null}
+                color={currentStatus === 1 ? "gold" : currentStatus === 2 ? "danger" : disabled ? (dayjs().isAfter(dayjs(schedule.date)) ? "green" : "default") : null}
                 variant={disabled ? "dashed" : "solid"}
                 key={schedule.scheduleId}
             >
