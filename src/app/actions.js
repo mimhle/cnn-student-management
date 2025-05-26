@@ -1,6 +1,6 @@
 "use server";
 
-const API_URL = "http://192.168.2.44:5163/api";
+const API_URL = "http://192.168.17.131:5163/api";
 
 export const loggedIn = async (request) => {
     return request.headers.get("Authorization") !== null;

@@ -46,7 +46,7 @@ const QuickAttendance = ({ schedule, disabled = false }) => {
                 className={`!w-fit ${disabled ? '!pointer-events-none' : ''}`}
                 size="small"
                 type="default"
-                color={currentStatus === 1 ? "gold" : currentStatus === 2 ? "danger" : disabled ? (dayjs().isAfter(dayjs(schedule.date)) ? "green" : "default") : null}
+                color={currentStatus === 1 ? "gold" : currentStatus === 2 ? "danger" : (dayjs().isAfter(dayjs(schedule.date)) ? "green" : null)}
                 variant={disabled ? "dashed" : "solid"}
                 key={schedule.scheduleId}
             >
@@ -69,7 +69,9 @@ export function StudentInfo({ params }) {
         getAllStudentInfo(localStorage.getItem("token"), params.id).then((data) => {
             console.log(data);
             setStudent(data);
-            setEnrollmentDetails(data.enrollment.map((item) => ({
+            setEnrollmentDetails(data.enrollment.filter((item) => {
+                return item.lecturerId === user.userId || user.role === "Student";
+            }).map((item) => ({
                 key: item.classSubjectId,
                 id: item.classSubjectId,
                 name: item.subjectName,
