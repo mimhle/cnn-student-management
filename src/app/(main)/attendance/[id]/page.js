@@ -39,7 +39,7 @@ export default function Page({ params }) {
                     {user.role !== "Student" ? <Button className={"!w-fit !px-2"} type="primary" onClick={() => {
                         router.push(`./${params.id}/${currentSchedule.scheduleId}`);
                     }}>
-                        Check attendance
+                        Check
                     </Button> : null}
                 </div> : null;
             };

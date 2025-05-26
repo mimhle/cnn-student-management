@@ -202,5 +202,16 @@ export function LecturerInfo({ params }) {
 
 export default function Page({ params }) {
     params = use(params);
-    return <LecturerInfo params={params} />;
+    const user = useContext(UserContext);
+    const [authorized, setAuthorized] = useState(false);
+
+    useLayoutEffect(() => {
+        if (user.role === "Lecturer" && user.userId !== params.id) {
+            window.location.href = "/";
+        } else {
+            setAuthorized(true);
+        }
+    }, []);
+
+    return authorized && <LecturerInfo params={params} />;
 }

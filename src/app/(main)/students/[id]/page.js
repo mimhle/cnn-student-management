@@ -276,7 +276,7 @@ export default function Page({ params }) {
     const [authorized, setAuthorized] = useState(false);
 
     useLayoutEffect(() => {
-        if (user.role === "Student") {
+        if (user.role === "Student" && user.userId !== params.id) {
             window.location.href = "/";
         } else {
             setAuthorized(true);
